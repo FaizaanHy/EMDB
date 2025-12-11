@@ -1,0 +1,75 @@
+import java.util.*;
+
+public class EmployeeService {
+
+    private EmployeeRepository repo;
+
+    public EmployeeService() {
+        repo = new EmployeeRepository();
+    }
+
+    //  FEATURE #2: ADMIN SEARCH
+    public Object searchForEditing(String type, String value, User currentUser) {
+
+        // Only admins can search to edit
+        if (!currentUser.getRole().equalsIgnoreCase("admin")) {
+            System.out.println("Access denied: Admin only.");
+            return null;
+        }
+
+        // Route based on search type
+        switch (type.toLowerCase()) {
+            case "id":
+                try {
+                    int id = Integer.parseInt(value);
+                    return repo.findByEmpID(id);
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid ID format.");
+                    return null;
+                }
+
+            case "name":
+                return repo.findByName(value);
+
+            case "dob":
+                return repo.findByDOB(value);
+
+            case "ssn":
+                return repo.findBySSN(value);
+
+            default:
+                System.out.println("Invalid search type. Use: id, name, dob, ssn");
+                return null;
+        }
+    }
+
+    //  FEATURE #3: EMPLOYEE VIEW-ONLY PROFILE
+    public Employee getOwnProfile(int empId, User currentUser) {
+
+        // General employees can ONLY view their own profile
+        if (currentUser.getRole().equalsIgnoreCase("employee") &&
+            currentUser.getEmpId() != empId) {
+
+            System.out.println("Access denied: cannot view another employee.");
+            return null;
+        }
+
+        // Retrieve employee
+        Employee emp = repo.findByEmpID(empId);
+
+        if (emp == null) {
+            System.out.println("Employee not found.");
+            return null;
+        }
+
+        // Mask SSN for non-admins
+        if (!currentUser.getRole().equalsIgnoreCase("admin")) {
+            String ssn = emp.getSsn();
+            if (ssn != null && ssn.length() >= 4) {
+                emp.setSsn("***-**-" + ssn.substring(ssn.length() - 4));
+            }
+        }
+
+        return emp;
+    }
+}
