@@ -1,0 +1,97 @@
+import java.sql.*;
+import java.util.*;
+
+public class EmployeeRepository {
+
+    String url = "jdbc:mysql://localhost:3306/employeedb";
+    String user = "root";
+    String pass = "great1121";
+
+    public Employee findByEmpID(int id){
+        String sql = "SELECT * FROM employee WHERE emp_id = ?";
+        try (Connection conn = DriverManager.getConnection(url, user, pass);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return extractEmployee(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public List<Employee> findByName(String name) {
+        List<Employee> list = new ArrayList<>();
+        String sql = "SELECT * FROM employee WHERE first_name LIKE ? OR last_name LIKE ?";
+
+        try (Connection conn = DriverManager.getConnection(url, user, pass);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, "%" + name + "%");
+            stmt.setString(2, "%" + name + "%");
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                list.add(extractEmployee(rs));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public Employee findBySSN(String ssn){
+        String sql = "SELECT * FROM employee WHERE ssn = ?";
+        try (Connection conn = DriverManager.getConnection(url, user, pass);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, ssn);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return extractEmployee(rs);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public List<Employee> findByDOB(String dob){
+        List<Employee> list = new ArrayList<>();
+        String sql = "SELECT * FROM employee WHERE dob = ?";
+        try (Connection conn = DriverManager.getConnection(url, user, pass);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, dob);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                list.add(extractEmployee(rs));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    private Employee extractEmployee(ResultSet rs) throws Exception {
+        Employee emp = new Employee();
+        emp.setEmpId(rs.getInt("emp_id"));
+        emp.setFirstName(rs.getString("first_name"));
+        emp.setLastName(rs.getString("last_name"));
+        emp.setDob(rs.getString("dob"));
+        emp.setSsn(rs.getString("ssn"));
+        emp.setSalary(rs.getDouble("salary"));
+        emp.setDivisionId(rs.getInt("division_id"));
+        emp.setJobId(rs.getInt("job_id"));
+        return emp;
+    }
+}
